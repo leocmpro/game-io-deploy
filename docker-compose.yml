@@ -1,0 +1,42 @@
+services:
+  redis:
+    image: redis:7-alpine
+    restart: always
+    environment:
+      TZ: America/Bogota
+
+  api:
+    image: node:lts-alpine
+    restart: always
+    command: node server.js
+    working_dir: /app/src
+    ports:
+      - 8080:8080
+    volumes:
+      - ./game-io-back:/app/src
+    environment:
+      TZ: America/Bogota
+      EXPRESS_PORT: 8080
+      REDIS_URL: redis://redis:6379/4
+
+  app-build:
+    image: node:lts-alpine
+    command: npm run build
+    working_dir: /app/src
+    volumes:
+      - ./game-io-front:/app/src
+    environment:
+      TZ: America/Bogota
+      VITE_SIO_URL: https://bookish-happiness-pp6x46v7x55275r9-8080.app.github.dev/
+
+  app:
+    image: python:3.12-alpine
+    restart: always
+    command: python -m http.server 3000
+    ports:
+      - 3000:3000
+    working_dir: /app
+    volumes:
+      - ./game-io-front/dist:/app
+    environment:
+      TZ: America/Bogota
